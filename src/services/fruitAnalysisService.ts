@@ -48,8 +48,8 @@ const processBackendResponse = (data: BackendResponse): ProcessedAnalysisResult 
   } else if (className.includes('banana')) {
     fruitType = 'banana';
   } else {
-    // Fallback por si hay alguna clase no esperada
-    fruitType = 'apple';
+    // Lanzar error para frutas no reconocidas
+    throw new Error(`Tipo de fruta no reconocida: ${data.class}. Solo se pueden analizar manzanas, naranjas y bananas.`);
   }
 
   // Determinar el estado (fresh o rotten)
