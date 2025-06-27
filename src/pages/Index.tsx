@@ -1,8 +1,9 @@
-
 import { useState } from "react";
 import ImageUpload from "@/components/ImageUpload";
 import ImagePreview from "@/components/ImagePreview";
 import ResultsDisplay from "@/components/ResultsDisplay";
+import { analyzeFruitImage } from "@/services/fruitAnalysisService";
+import { useToast } from "@/hooks/use-toast";
 
 export interface AnalysisResult {
   fruitType: 'apple' | 'orange' | 'banana' | null;
@@ -20,6 +21,7 @@ const Index = () => {
     confidence: 0,
     processing: false
   });
+  const { toast } = useToast();
 
   const handleImageSelect = (file: File) => {
     setSelectedImage(file);
@@ -43,19 +45,31 @@ const Index = () => {
 
     setAnalysisResult(prev => ({ ...prev, processing: true }));
 
-    // Simular llamada al backend
-    setTimeout(() => {
-      // Resultado simulado para demostración
-      const fruits: ('apple' | 'orange' | 'banana')[] = ['apple', 'orange', 'banana'];
-      const conditions: ('fresh' | 'rotten')[] = ['fresh', 'rotten'];
+    try {
+      const result = await analyzeFruitImage(selectedImage);
       
       setAnalysisResult({
-        fruitType: fruits[Math.floor(Math.random() * fruits.length)],
-        condition: conditions[Math.floor(Math.random() * conditions.length)],
-        confidence: Math.floor(Math.random() * 30) + 70, // 70-100%
+        fruitType: result.fruitType,
+        condition: result.condition,
+        confidence: result.confidence,
         processing: false
       });
-    }, 3000);
+
+      toast({
+        title: "Análisis completado",
+        description: "La imagen ha sido procesada exitosamente.",
+      });
+    } catch (error) {
+      console.error('Error during analysis:', error);
+      
+      setAnalysisResult(prev => ({ ...prev, processing: false }));
+      
+      toast({
+        title: "Error en el análisis",
+        description: error instanceof Error ? error.message : "Error desconocido al procesar la imagen.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReset = () => {
